@@ -61,7 +61,7 @@ export function modalsReducer(
       )
 
       return {
-        current: remainingModals[remainingModals.length - 1] || state.current,
+        current: remainingModals.at(-1) || state.current,
         modals: remainingModals,
       }
     }

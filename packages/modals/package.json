@@ -18,8 +18,9 @@
     "react-dom": "^19"
   },
   "dependencies": {
-    "lucide-react": "^0.474.0",
+    "@headlessui/react": "^2.2.10",
     "clsx": "^2.1.1",
+    "lucide-react": "^0.474.0",
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {

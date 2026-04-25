@@ -273,7 +273,10 @@ export function ModalsProvider({
         {...modalProps}
         {...currentModalProps}
         opened={state.modals.length > 0}
-        onClose={() => closeModal(state.current?.id as any)}
+        onClose={() => {
+          const id = stateRef.current.current?.id
+          if (id) closeModal(id)
+        }}
       >
         {content}
       </Modal>

@@ -1,4 +1,13 @@
 export * from "./ModalsProvider"
+export type { ModalProps } from "./Modal"
+export {
+  Modal,
+  ModalDialog,
+  DialogBackdrop,
+  DialogPanel,
+  DialogTitle,
+  DialogDescription,
+} from "./Modal"
 export type {
   ModalsOverride,
   ContextModalProps,
