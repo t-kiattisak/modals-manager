@@ -9,7 +9,8 @@ export type ModalSettings = Partial<Omit<ModalProps, "opened">> & {
 
 export type ConfirmLabels = Record<"confirm" | "cancel", ReactNode>
 
-export interface OpenConfirmModal extends ModalSettings, ConfirmModalProps {}
+/** Intersection avoids TS conflict between `ModalSettings` and `ConfirmModalProps` on `children`. */
+export type OpenConfirmModal = ModalSettings & ConfirmModalProps
 export interface OpenContextModal<CustomProps extends Record<string, any> = {}>
   extends ModalSettings {
   innerProps: CustomProps

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useLayoutEffect } from "react"
+import { useEffect, useLayoutEffect, useRef } from "react"
 
 export const useIsomorphicEffect =
   typeof document !== "undefined" ? useLayoutEffect : useEffect
@@ -12,24 +12,32 @@ function dispatchEvent<T>(type: string, detail?: T) {
 export function createUseExternalEvents<
   Handlers extends Record<string, (detail: any) => void>,
 >(prefix: string) {
-  function _useExternalEvents(events: Handlers) {
-    const handlers = Object.keys(events).reduce<any>((acc, eventKey) => {
-      acc[`${prefix}:${eventKey}`] = (event: CustomEvent) =>
-        events[eventKey]!(event.detail)
-      return acc
-    }, {})
+  function useRegisteredWindowEvents(events: Handlers) {
+    const eventsRef = useRef(events)
+    eventsRef.current = events
 
     useIsomorphicEffect(() => {
-      Object.keys(handlers).forEach((eventKey) => {
-        window.removeEventListener(eventKey, handlers[eventKey])
-        window.addEventListener(eventKey, handlers[eventKey])
-      })
+      const keys = Object.keys(eventsRef.current) as (keyof Handlers & string)[]
+      const registered: { type: string; listener: (e: Event) => void }[] = []
 
-      return () =>
-        Object.keys(handlers).forEach((eventKey) => {
-          window.removeEventListener(eventKey, handlers[eventKey])
-        })
-    }, [handlers])
+      for (const key of keys) {
+        const type = `${prefix}:${String(key)}`
+        const listener = (event: Event) => {
+          const handler = eventsRef.current[key]
+          if (typeof handler === "function") {
+            handler((event as CustomEvent).detail)
+          }
+        }
+        window.addEventListener(type, listener)
+        registered.push({ type, listener })
+      }
+
+      return () => {
+        for (const { type, listener } of registered) {
+          window.removeEventListener(type, listener)
+        }
+      }
+    }, [prefix])
   }
 
   function createEvent<EventKey extends keyof Handlers>(event: EventKey) {
@@ -40,5 +48,5 @@ export function createUseExternalEvents<
     ) => dispatchEvent(`${prefix}:${String(event)}`, payload[0])
   }
 
-  return [_useExternalEvents, createEvent] as const
+  return [useRegisteredWindowEvents, createEvent] as const
 }

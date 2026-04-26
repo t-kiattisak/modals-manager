@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useReducer, useRef } from "react"
+import { useCallback, useMemo, useReducer, useRef } from "react"
 import {
   ConfirmLabels,
   ContextModalProps,
@@ -15,6 +15,8 @@ import { useModalsEvents } from "./utility/events.utility"
 import { ConfirmModal } from "./components/ConfirmModal"
 import { ModalsContext } from "./context/use-modal.context"
 import { Modal } from "./Modal"
+
+const emptyModalSettings = {} as ModalSettings
 
 export interface ModalsProviderProps {
   /** Your app */
@@ -72,7 +74,7 @@ export function ModalsProvider({
   modalProps,
   labels,
   modals,
-}: ModalsProviderProps) {
+}: Readonly<ModalsProviderProps>) {
   const [state, dispatch] = useReducer(modalsReducer, {
     modals: [],
     current: null,
@@ -187,11 +189,15 @@ export function ModalsProvider({
     [dispatch],
   )
 
+  const openContextModalFromEvent = useCallback(
+    ({ modal, ...payload }: any) => openContextModal(modal, payload),
+    [openContextModal],
+  )
+
   useModalsEvents({
     openModal,
     openConfirmModal,
-    openContextModal: ({ modal, ...payload }: any) =>
-      openContextModal(modal, payload),
+    openContextModal: openContextModalFromEvent,
     closeModal,
     closeContextModal: closeModal,
     closeAllModals: closeAll,
@@ -199,18 +205,31 @@ export function ModalsProvider({
     updateContextModal,
   })
 
-  const ctx: ModalsContextProps = {
-    modalProps: modalProps || {},
-    modals: state.modals,
-    openModal,
-    openConfirmModal,
-    openContextModal,
-    closeModal,
-    closeContextModal: closeModal,
-    closeAll,
-    updateModal,
-    updateContextModal,
-  }
+  const ctx: ModalsContextProps = useMemo(
+    () => ({
+      modalProps: modalProps ?? emptyModalSettings,
+      modals: state.modals,
+      openModal,
+      openConfirmModal,
+      openContextModal,
+      closeModal,
+      closeContextModal: closeModal,
+      closeAll,
+      updateModal,
+      updateContextModal,
+    }),
+    [
+      modalProps,
+      state.modals,
+      openModal,
+      openConfirmModal,
+      openContextModal,
+      closeModal,
+      closeAll,
+      updateModal,
+      updateContextModal,
+    ],
+  )
 
   const getCurrentModal = () => {
     const currentModal = stateRef.current.current
